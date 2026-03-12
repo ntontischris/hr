@@ -1,0 +1,70 @@
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_GITHUB_TOKEN_HERE"
+      },
+      "description": "GitHub: repos, issues, PRs, code search"
+    },
+    "supabase": {
+      "command": "npx",
+      "args": ["-y", "@supabase/mcp-server-supabase@latest", "--project-ref", "YOUR_PROJECT_REF_HERE"],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "YOUR_SUPABASE_ACCESS_TOKEN_HERE"
+      },
+      "description": "Supabase: database, auth, storage, edge functions"
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/your/project"],
+      "description": "Local filesystem access for reading/writing files"
+    },
+    "postgres": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres"],
+      "env": {
+        "DATABASE_URL": "YOUR_DATABASE_URL_HERE"
+      },
+      "description": "Direct PostgreSQL access for complex queries"
+    },
+    "vercel": {
+      "command": "npx",
+      "args": ["-y", "vercel-mcp-server"],
+      "env": {
+        "VERCEL_TOKEN": "YOUR_VERCEL_TOKEN_HERE"
+      },
+      "description": "Vercel: deployments, domains, logs, env vars"
+    },
+    "stripe": {
+      "command": "npx",
+      "args": ["-y", "@stripe/mcp", "--tools=all"],
+      "env": {
+        "STRIPE_SECRET_KEY": "YOUR_STRIPE_SECRET_KEY_HERE"
+      },
+      "description": "Stripe: customers, subscriptions, payments, invoices"
+    },
+    "slack": {
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-server-slack"],
+      "env": {
+        "SLACK_BOT_TOKEN": "YOUR_SLACK_BOT_TOKEN_HERE",
+        "SLACK_TEAM_ID": "YOUR_TEAM_ID_HERE"
+      },
+      "description": "Slack: messages, channels, users"
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "description": "Step-by-step reasoning for complex problems"
+    }
+  },
+
+  "_notes": {
+    "warning": "Replace ALL YOUR_*_HERE placeholders with actual values",
+    "context_window": "Keep fewer than 10 MCPs enabled per project. Each MCP tool description consumes context.",
+    "disable_unused": "Use disabledMcpServers in project .claude/settings.json to disable MCPs per project",
+    "install": "Copy desired servers to ~/.claude.json under mcpServers"
+  }
+}

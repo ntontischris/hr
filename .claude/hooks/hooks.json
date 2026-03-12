@@ -1,0 +1,101 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const i=JSON.parse(d);const cmd=i.tool_input?.command||'';const blocked=[/rm\\s+-rf\\s+\\/(?!tmp)/,/DROP\\s+DATABASE/i,/chmod\\s+-R\\s+777/,/curl.*\\|\\s*(bash|sh)/,/>(\\s*)\\/etc\\//,/mkfs\\./,/dd\\s+if=/];for(const p of blocked){if(p.test(cmd)){process.stderr.write('[BLOCKED] Dangerous command: '+cmd+'\\n');process.exit(2)}}console.log(d)}catch(e){console.log(d)}})\"",
+            "description": "Block dangerous bash commands (rm -rf /, DROP DATABASE, chmod 777, curl|bash)"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const i=JSON.parse(d);const cmd=i.tool_input?.command||'';if(process.platform!=='win32'&&!process.env.TMUX&&/(npm (run dev|start)|pnpm (dev|start)|yarn (dev|start)|bun (dev|start)|python.*manage\\.py runserver)/.test(cmd)){process.stderr.write('[Hook] Consider running dev servers in tmux for session persistence\\n');process.stderr.write('[Hook] tmux new -s dev  |  tmux attach -t dev\\n')}}catch{}console.log(d)})\"",
+            "description": "Suggest tmux for long-running processes"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const i=JSON.parse(d);const cmd=i.tool_input?.command||'';if(/git push/.test(cmd)){process.stderr.write('[Hook] Reminder: review changes before push\\n');process.stderr.write('[Hook] Run tests: pnpm test && pnpm lint\\n')}}catch{}console.log(d)})\"",
+            "description": "Remind to review before git push"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const i=JSON.parse(d);const f=i.tool_input?.file_path||'';const blocked=[/\\.env$/,/\\.env\\.local$/,/\\.env\\.production$/,/package-lock\\.json$/,/pnpm-lock\\.yaml$/,/yarn\\.lock$/];for(const p of blocked){if(p.test(f)){process.stderr.write('[BLOCKED] Protected file: '+f+'\\n');process.exit(2)}}}catch{}console.log(d)})\"",
+            "description": "Block writing to .env and lock files"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const i=JSON.parse(d);const f=i.tool_input?.file_path||'';if(/\\.(ts|tsx|js|jsx)$/.test(f)){const{execSync}=require('child_process');try{execSync('npx prettier --write '+f,{timeout:10000,stdio:'pipe'});process.stderr.write('[Hook] Formatted: '+f+'\\n')}catch{}}}catch{}console.log(d)})\"",
+            "description": "Auto-format TypeScript/JavaScript files with Prettier after edit"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const i=JSON.parse(d);const f=i.tool_input?.file_path||'';if(/\\.(ts|tsx|js|jsx)$/.test(f)){const{execSync}=require('child_process');try{const out=execSync('grep -n \"console\\\\.log\" '+f,{encoding:'utf8',timeout:5000});if(out.trim()){process.stderr.write('[Hook] console.log detected in '+f+':\\n'+out+'[Hook] Remove before committing\\n')}}catch{}}}catch{}console.log(d)})\"",
+            "description": "Warn about console.log in production code"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const i=JSON.parse(d);const f=i.tool_input?.file_path||'';if(/\\.(py)$/.test(f)){const{execSync}=require('child_process');try{execSync('ruff format '+f,{timeout:10000,stdio:'pipe'});process.stderr.write('[Hook] Formatted: '+f+'\\n')}catch{}}}catch{}console.log(d)})\"",
+            "description": "Auto-format Python files with ruff after edit"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const{execSync}=require('child_process');try{const diff=execSync('git diff --stat',{encoding:'utf8',timeout:5000});if(diff.trim()){process.stderr.write('\\n[Session Summary] Uncommitted changes:\\n'+diff+'\\n')}}catch{}try{const status=execSync('git status --short',{encoding:'utf8',timeout:5000});if(status.trim()){process.stderr.write('[Session] Files: '+status.trim().split('\\n').length+' modified\\n')}}catch{}\"",
+            "description": "Show git changes summary when session ends"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/session-start.js"
+          }
+        ]
+      }
+    ]
+  }
+}

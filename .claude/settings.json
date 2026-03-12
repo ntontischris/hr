@@ -1,0 +1,73 @@
+{
+  "permissions": {
+    "allow": ["Read", "Glob", "Grep", "Skill"],
+    "deny": []
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [{
+          "type": "command",
+          "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const i=JSON.parse(d);const cmd=i.tool_input?.command||'';const blocked=[/rm\\s+-rf\\s+\\/(?!tmp)/,/DROP\\s+DATABASE/i,/chmod\\s+-R\\s+777/,/curl.*\\|\\s*(bash|sh)/,/>(\\s*)\\/etc\\//];for(const p of blocked){if(p.test(cmd)){process.stderr.write('[BLOCKED] Dangerous: '+cmd+'\\n');process.exit(2)}}console.log(d)}catch(e){console.log(d)}})\"",
+          "description": "Block dangerous commands"
+        }]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [{
+          "type": "command",
+          "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const i=JSON.parse(d);const cmd=i.tool_input?.command||'';if(/git push/.test(cmd)){process.stderr.write('[Hook] Review before push: pnpm test && pnpm lint\\n')}}catch{}console.log(d)})\"",
+          "description": "Remind to test before push"
+        }]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [{
+          "type": "command",
+          "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const i=JSON.parse(d);const f=i.tool_input?.file_path||'';if(/\\.env(\\..*)?$|lock\\.json$|lock\\.yaml$|\\.lock$/.test(f)){process.stderr.write('[BLOCKED] Protected: '+f+'\\n');process.exit(2)}}catch{}console.log(d)})\"",
+          "description": "Block writes to .env and lock files"
+        }]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [{
+          "type": "command",
+          "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const i=JSON.parse(d);const f=i.tool_input?.file_path||'';if(/\\.(ts|tsx|js|jsx)$/.test(f)){const{execSync}=require('child_process');try{execSync('npx prettier --write '+f,{timeout:10000,stdio:'pipe'})}catch{}}else if(/\\.py$/.test(f)){const{execSync}=require('child_process');try{execSync('ruff format '+f,{timeout:10000,stdio:'pipe'})}catch{}}}catch{}console.log(d)})\"",
+          "description": "Auto-format TS/JS/Python after edit"
+        }]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [{
+          "type": "command",
+          "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const i=JSON.parse(d);const f=i.tool_input?.file_path||'';if(/\\.(ts|tsx|js|jsx)$/.test(f)){const{execSync}=require('child_process');try{const o=execSync('grep -n \"console\\\\.log\" '+f,{encoding:'utf8',timeout:5000});if(o.trim())process.stderr.write('[Hook] console.log in '+f+' — remove before commit\\n')}catch{}}}catch{}console.log(d)})\"",
+          "description": "Warn about console.log"
+        }]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [{
+          "type": "command",
+          "command": "node -e \"const{execSync}=require('child_process');try{const d=execSync('git diff --stat',{encoding:'utf8',timeout:5000});if(d.trim())process.stderr.write('\\n[Session] Changes:\\n'+d)}catch{}\"",
+          "description": "Show git changes on session end"
+        }]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [{
+          "type": "command",
+          "command": "node .claude/hooks/session-start.js"
+        }]
+      }
+    ]
+  },
+  "mcpServers": {},
+  "disabledMcpServers": []
+}

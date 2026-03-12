@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd \"C:/Users/ntont/Desktop/HR\" && pnpm create next-app@latest . --ts --tailwind --eslint --app --no-src-dir --import-alias \"@/*\" --use-pnpm --turbopack 2>&1)",
+      "Read(//c/tmp/**)",
+      "Bash(rm -rf hr-scaffold)",
+      "Bash(pnpm create:*)",
+      "Bash(# Copy scaffold files to HR directory \\(excluding .git, node_modules, .next\\)\ncp /tmp/hr-scaffold/.gitignore /c/Users/ntont/Desktop/HR/\ncp /tmp/hr-scaffold/eslint.config.mjs /c/Users/ntont/Desktop/HR/\ncp /tmp/hr-scaffold/next.config.ts /c/Users/ntont/Desktop/HR/\ncp /tmp/hr-scaffold/next-env.d.ts /c/Users/ntont/Desktop/HR/\ncp /tmp/hr-scaffold/package.json /c/Users/ntont/Desktop/HR/\ncp /tmp/hr-scaffold/pnpm-lock.yaml /c/Users/ntont/Desktop/HR/\ncp /tmp/hr-scaffold/postcss.config.mjs /c/Users/ntont/Desktop/HR/\ncp /tmp/hr-scaffold/tsconfig.json /c/Users/ntont/Desktop/HR/\ncp -r /tmp/hr-scaffold/public /c/Users/ntont/Desktop/HR/\n\n# Move src/app/ to app/ \\(no src dir\\)\nmkdir -p /c/Users/ntont/Desktop/HR/app\ncp -r /tmp/hr-scaffold/src/app/* /c/Users/ntont/Desktop/HR/app/)",
+      "Bash(cat > /c/Users/ntont/Desktop/HR/.env.local << 'EOF'\nNEXT_PUBLIC_SUPABASE_URL=\nNEXT_PUBLIC_SUPABASE_ANON_KEY=\nSUPABASE_SERVICE_ROLE_KEY=\nOPENAI_API_KEY=\nNEXT_PUBLIC_APP_URL=http://localhost:3000\nALLOWED_EMAIL_DOMAIN=\nHR_MANAGER_EMAILS=\nRATE_LIMIT_CHAT_PER_MINUTE=20\nRATE_LIMIT_UPLOAD_PER_HOUR=50\nEOF\necho \"Created .env.local\")",
+      "Bash(git init:*)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm dlx:*)"
+    ]
+  }
+}

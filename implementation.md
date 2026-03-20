@@ -12,16 +12,19 @@
 | Ημερομηνία | Βήματα | Περιγραφή |
 |------------|--------|-----------|
 | 2026-03-12 | — | PRD βελτιώθηκε, CLAUDE.md δημιουργήθηκε, implementation plan σχεδιάστηκε |
+| 2026-03-12 | 1.1–1.11 | Phase 1 Foundation complete: scaffolding, deps, shadcn, migrations (7 SQL files), Supabase clients, auth routes, middleware, validators, API helpers, errors, providers, root layout, vitest config. Build/typecheck/lint pass. |
+| 2026-03-20 | 2.3 | Document parser: extractText() for PDF/DOCX/TXT with size validation, type guard, whitespace normalisation. 5/5 tests passing. pdf-parse v2 class-based API used (PDFParse + getText()). |
+| 2026-03-20 | 2.7 | Chat streaming module: streamChatResponse() with SSE format, ReadableStream, fullResponsePromise. 4/4 tests passing. Typecheck clean. |
 
 ---
 
 ## Phase 1: Foundation
 
 ### Step 1.1 — Project Scaffolding
-- [ ] `pnpm create next-app@latest` με TypeScript + Tailwind + App Router
-- [ ] `git init` + `git checkout -b feat/foundation`
-- [ ] Δημιουργία `.env.local` με όλα τα env vars
-- [ ] Δημιουργία `vercel.json` (region: fra1, maxDuration per route)
+- [x] `pnpm create next-app@latest` με TypeScript + Tailwind + App Router
+- [x] `git init` + `git checkout -b feat/foundation`
+- [x] Δημιουργία `.env.local` με όλα τα env vars
+- [x] Δημιουργία `vercel.json` (region: fra1, maxDuration per route)
 
 **Files:**
 - `package.json`
@@ -30,34 +33,34 @@
 - `vercel.json`
 
 ### Step 1.2 — Install Dependencies
-- [ ] Production deps: `openai`, `@supabase/ssr`, `@supabase/supabase-js`, `zod`, `pdf-parse`, `mammoth`, `lucide-react`, `class-variance-authority`, `clsx`, `tailwind-merge`
-- [ ] Dev deps: `vitest`, `@testing-library/react`, `@testing-library/jest-dom`, `jsdom`, `supabase`
-- [ ] `pnpm dlx shadcn@latest init`
-- [ ] shadcn components: button, input, textarea, card, dialog, dropdown-menu, avatar, badge, separator, scroll-area, skeleton, tabs, table, tooltip, sheet
+- [x] Production deps: `openai`, `@supabase/ssr`, `@supabase/supabase-js`, `zod`, `pdf-parse`, `mammoth`, `lucide-react`, `class-variance-authority`, `clsx`, `tailwind-merge`
+- [x] Dev deps: `vitest`, `@testing-library/react`, `@testing-library/jest-dom`, `jsdom`, `supabase`
+- [x] `pnpm dlx shadcn@latest init`
+- [x] shadcn components: button, input, textarea, card, dialog, dropdown-menu, avatar, badge, separator, scroll-area, skeleton, tabs, table, tooltip, sheet
 
 **Files:**
 - `package.json` (updated)
 - `components/ui/*.tsx`
 
 ### Step 1.3 — Database Migrations
-- [ ] `supabase/migrations/001_extensions.sql` — vector + pg_trgm
-- [ ] `supabase/migrations/002_profiles.sql` — table, RLS, triggers (handle_new_user + sync_role_to_claims)
-- [ ] `supabase/migrations/003_documents.sql` — table, RLS, HNSW index, trigram index
-- [ ] `supabase/migrations/004_chat.sql` — chat_sessions + chat_messages, RLS, indexes
-- [ ] `supabase/migrations/005_audit_logs.sql` — table, RLS (SELECT only for HR), indexes
-- [ ] `supabase/migrations/006_rate_limits.sql` — table, cleanup function
-- [ ] `supabase/migrations/007_search_functions.sql` — match_documents() + hybrid_search()
-- [ ] `pnpm dlx supabase db push` — εφαρμογή migrations
-- [ ] `pnpm dlx supabase gen types typescript` → `lib/types/database.ts`
+- [x] `supabase/migrations/001_extensions.sql` — vector + pg_trgm
+- [x] `supabase/migrations/002_profiles.sql` — table, RLS, triggers (handle_new_user + sync_role_to_claims)
+- [x] `supabase/migrations/003_documents.sql` — table, RLS, HNSW index, trigram index
+- [x] `supabase/migrations/004_chat.sql` — chat_sessions + chat_messages, RLS, indexes
+- [x] `supabase/migrations/005_audit_logs.sql` — table, RLS (SELECT only for HR), indexes
+- [x] `supabase/migrations/006_rate_limits.sql` — table, cleanup function
+- [x] `supabase/migrations/007_search_functions.sql` — match_documents() + hybrid_search()
+- [ ] `pnpm dlx supabase db push` — εφαρμογή migrations (pending: Supabase project not created yet)
+- [x] `lib/types/database.ts` — manually typed (will regenerate with `supabase gen types` later)
 
 **Files:**
 - `supabase/migrations/001-007_*.sql`
 - `lib/types/database.ts`
 
 ### Step 1.4 — Supabase Client Setup
-- [ ] `lib/supabase/server.ts` — Server client με `@supabase/ssr` + `cookies()`
-- [ ] `lib/supabase/client.ts` — Browser client με `createBrowserClient`
-- [ ] `lib/supabase/admin.ts` — Service role client (για audit logs μόνο)
+- [x] `lib/supabase/server.ts` — Server client με `@supabase/ssr` + `cookies()`
+- [x] `lib/supabase/client.ts` — Browser client με `createBrowserClient`
+- [x] `lib/supabase/admin.ts` — Service role client (για audit logs μόνο)
 
 **Files:**
 - `lib/supabase/server.ts`
@@ -73,10 +76,10 @@
 **Files:** Κανένα (Dashboard config)
 
 ### Step 1.6 — Auth Routes
-- [ ] `app/(auth)/login/page.tsx` — Login page με Google + Microsoft buttons (ελληνικά)
-- [ ] `app/(auth)/callback/route.ts` — OAuth callback, exchange code, resolve role
-- [ ] `app/(auth)/logout/route.ts` — Sign out + audit log
-- [ ] `lib/auth/roles.ts` — `resolveUserRole()` + `RoleSchema`
+- [x] `app/(auth)/login/page.tsx` — Login page με Google + Microsoft buttons (ελληνικά)
+- [x] `app/(auth)/callback/route.ts` — OAuth callback, exchange code, resolve role
+- [x] `app/(auth)/logout/route.ts` — Sign out + audit log
+- [x] `lib/auth/roles.ts` — `resolveUserRole()` + `RoleSchema`
 
 **Files:**
 - `app/(auth)/login/page.tsx`
@@ -85,18 +88,18 @@
 - `lib/auth/roles.ts`
 
 ### Step 1.7 — Middleware
-- [ ] `middleware.ts` — Route protection με `getUser()`
-- [ ] `/chat/*` → requires auth
-- [ ] `/admin/*` → requires hr_manager/admin role (from JWT)
-- [ ] `/api/*` → requires auth
+- [x] `middleware.ts` — Route protection με `getUser()`
+- [x] `/chat/*` → requires auth
+- [x] `/admin/*` → requires hr_manager/admin role (from JWT)
+- [x] `/api/*` → requires auth
 
 **Files:**
 - `middleware.ts`
 
 ### Step 1.8 — Zod Validators
-- [ ] `lib/validators/chat.ts` — ChatRequestSchema, FeedbackSchema
-- [ ] `lib/validators/documents.ts` — UploadDocumentSchema, DocumentSearchSchema, UpdateDocumentSchema, DocumentCategorySchema
-- [ ] `lib/validators/common.ts` — PaginationSchema, UuidSchema
+- [x] `lib/validators/chat.ts` — ChatRequestSchema, FeedbackSchema
+- [x] `lib/validators/documents.ts` — UploadDocumentSchema, DocumentSearchSchema, UpdateDocumentSchema, DocumentCategorySchema
+- [x] `lib/validators/common.ts` — PaginationSchema, UuidSchema
 
 **Files:**
 - `lib/validators/chat.ts`
@@ -104,19 +107,19 @@
 - `lib/validators/common.ts`
 
 ### Step 1.9 — API Response Helpers
-- [ ] `lib/api/response.ts` — `success()`, `error()` helpers
-- [ ] `lib/errors.ts` — AppError, AuthError, ValidationError, NotFoundError, RateLimitError
+- [x] `lib/api/response.ts` — `success()`, `error()` helpers
+- [x] `lib/errors.ts` — AppError, AuthError, ValidationError, NotFoundError, RateLimitError, ForbiddenError
 
 **Files:**
 - `lib/api/response.ts`
 - `lib/errors.ts`
 
 ### Step 1.10 — Root Layout & Providers
-- [ ] `app/layout.tsx` — html lang="el", providers wrap
-- [ ] `components/providers/supabase-provider.tsx` — Browser client context + onAuthStateChange
-- [ ] `components/providers/theme-provider.tsx` — Dark/light mode
-- [ ] `app/globals.css` — Tailwind v4 + shadcn theming
-- [ ] `app/page.tsx` — Redirect authenticated→/chat, unauthenticated→/login
+- [x] `app/layout.tsx` — html lang="el", providers wrap (Inter font, Greek subset)
+- [x] `components/providers/supabase-provider.tsx` — Browser client context + onAuthStateChange
+- [x] `components/providers/theme-provider.tsx` — Dark/light/system mode
+- [x] `app/globals.css` — Tailwind v4 + shadcn theming
+- [x] `app/page.tsx` — Redirect authenticated→/chat, unauthenticated→/login
 
 **Files:**
 - `app/layout.tsx`
@@ -126,9 +129,9 @@
 - `components/providers/theme-provider.tsx`
 
 ### Step 1.11 — Vitest Config
-- [ ] `vitest.config.ts` — jsdom environment, @/ alias
-- [ ] `vitest.setup.ts` — @testing-library/jest-dom
-- [ ] package.json scripts: dev, build, test, lint, typecheck
+- [x] `vitest.config.ts` — jsdom environment, @/ alias
+- [x] `vitest.setup.ts` — @testing-library/jest-dom
+- [x] package.json scripts: dev, build, test, lint, typecheck
 
 **Files:**
 - `vitest.config.ts`
@@ -152,12 +155,14 @@
 - `lib/ai/embeddings.ts`
 
 ### Step 2.3 — Document Parser
-- [ ] `lib/documents/parser.ts` — `extractText()` για PDF, DOCX, TXT
-- [ ] File size validation (max 10MB)
-- [ ] Whitespace normalization
+- [x] `lib/documents/parser.ts` — `extractText()` για PDF, DOCX, TXT
+- [x] File size validation (max 10MB)
+- [x] Whitespace normalization
+- [x] `lib/documents/parser.test.ts` — 5 unit tests (all passing)
 
 **Files:**
 - `lib/documents/parser.ts`
+- `lib/documents/parser.test.ts`
 
 ### Step 2.4 — Text Chunker + Tests
 - [ ] `lib/documents/chunker.ts` — Paragraph-aware chunking, overlap, min 100 chars
@@ -180,12 +185,13 @@
 - `lib/ai/prompts.ts`
 
 ### Step 2.7 — Chat Streaming Module
-- [ ] `lib/ai/chat.ts` — `streamChatResponse()` με SSE format
-- [ ] ReadableStream construction
-- [ ] onComplete callback for DB writes
+- [x] `lib/ai/chat.ts` — `streamChatResponse()` με SSE format
+- [x] ReadableStream construction
+- [x] fullResponsePromise for DB writes (replaces onComplete callback)
 
 **Files:**
 - `lib/ai/chat.ts`
+- `lib/ai/chat.test.ts`
 
 ### Step 2.8 — Chat API Route
 - [ ] `app/api/chat/route.ts` — POST handler

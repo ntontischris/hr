@@ -15,6 +15,9 @@
 | 2026-03-12 | 1.1–1.11 | Phase 1 Foundation complete: scaffolding, deps, shadcn, migrations (7 SQL files), Supabase clients, auth routes, middleware, validators, API helpers, errors, providers, root layout, vitest config. Build/typecheck/lint pass. |
 | 2026-03-20 | 2.3 | Document parser: extractText() for PDF/DOCX/TXT with size validation, type guard, whitespace normalisation. 5/5 tests passing. pdf-parse v2 class-based API used (PDFParse + getText()). |
 | 2026-03-20 | 2.7 | Chat streaming module: streamChatResponse() with SSE format, ReadableStream, fullResponsePromise. 4/4 tests passing. Typecheck clean. |
+| 2026-03-20 | 2.1, 2.2, 2.4–2.6, 2.8–2.15, 1.3 | Sync session: checked off all steps completed in prior sessions. Fixed build (empty upload/route.ts, ESM config, Database types regenerated from live Supabase). Applied migrations to cloud Supabase (rynnpkfsromskbqjizbk). Fixed lint (test files `any`, eslint ignores). 10 test files, 47 tests passing. Build/lint/tests all green. |
+| 2026-03-20 | 3.1, 3.2, 3.4 | Phase 3 Frontend: protected layout (sidebar, header, user-menu, mobile-nav), chat interface (welcome screen, suggestions, SSE streaming hook, message list/bubbles, typing indicator, source citations, feedback buttons, session list), error boundaries (chat, global, 404). All Greek UI. Root layout updated (Inter font, Greek subset, providers). Build/lint/tests green. |
+| 2026-03-20 | 3.3, 4.1–4.5 | Chat hook tests (11 tests, SSE parsing, errors, API contract). Phase 4 Admin: layout (role guard), dashboard (stats cards), document management (table + upload dialog), audit log viewer (filterable table), user management (admin-only, role change dropdown). 20 routes, 58 tests. Build/lint green. |
 
 ---
 
@@ -50,7 +53,7 @@
 - [x] `supabase/migrations/005_audit_logs.sql` — table, RLS (SELECT only for HR), indexes
 - [x] `supabase/migrations/006_rate_limits.sql` — table, cleanup function
 - [x] `supabase/migrations/007_search_functions.sql` — match_documents() + hybrid_search()
-- [ ] `pnpm dlx supabase db push` — εφαρμογή migrations (pending: Supabase project not created yet)
+- [x] `pnpm dlx supabase db push` — Migrations applied to cloud project (rynnpkfsromskbqjizbk)
 - [x] `lib/types/database.ts` — manually typed (will regenerate with `supabase gen types` later)
 
 **Files:**
@@ -143,13 +146,13 @@
 ## Phase 2: RAG Pipeline
 
 ### Step 2.1 — OpenAI Client
-- [ ] `lib/ai/client.ts` — Single OpenAI instance
+- [x] `lib/ai/client.ts` — Single OpenAI instance
 
 **Files:**
 - `lib/ai/client.ts`
 
 ### Step 2.2 — Embeddings Module
-- [ ] `lib/ai/embeddings.ts` — `generateEmbedding()` (single) + `generateEmbeddings()` (batch, groups of 100)
+- [x] `lib/ai/embeddings.ts` — `generateEmbedding()` (single) + `generateEmbeddings()` (batch, groups of 100)
 
 **Files:**
 - `lib/ai/embeddings.ts`
@@ -165,21 +168,21 @@
 - `lib/documents/parser.test.ts`
 
 ### Step 2.4 — Text Chunker + Tests
-- [ ] `lib/documents/chunker.ts` — Paragraph-aware chunking, overlap, min 100 chars
-- [ ] `lib/documents/chunker.test.ts` — Unit tests
+- [x] `lib/documents/chunker.ts` — Paragraph-aware chunking, overlap, min 100 chars
+- [x] `lib/documents/chunker.test.ts` — Unit tests
 
 **Files:**
 - `lib/documents/chunker.ts`
 - `lib/documents/chunker.test.ts`
 
 ### Step 2.5 — Document Processing Pipeline
-- [ ] `lib/documents/processor.ts` — Orchestrates: extract → chunk → embed → return
+- [x] `lib/documents/processor.ts` — Orchestrates: extract → chunk → embed → return
 
 **Files:**
 - `lib/documents/processor.ts`
 
 ### Step 2.6 — System Prompts
-- [ ] `lib/ai/prompts.ts` — Greek prompts, role-specific instructions
+- [x] `lib/ai/prompts.ts` — Greek prompts, role-specific instructions
 
 **Files:**
 - `lib/ai/prompts.ts`
@@ -194,32 +197,32 @@
 - `lib/ai/chat.test.ts`
 
 ### Step 2.8 — Chat API Route
-- [ ] `app/api/chat/route.ts` — POST handler
-- [ ] Auth check (getUser)
-- [ ] Zod validation
-- [ ] Rate limit check
-- [ ] Embedding generation → hybrid search
-- [ ] Multi-turn context (last 10 messages)
-- [ ] Streaming response
-- [ ] Save messages + audit log via onComplete
+- [x] `app/api/chat/route.ts` — POST handler
+- [x] Auth check (getUser)
+- [x] Zod validation
+- [x] Rate limit check
+- [x] Embedding generation → hybrid search
+- [x] Multi-turn context (last 10 messages)
+- [x] Streaming response
+- [x] Save messages + audit log via onComplete
 
 **Files:**
 - `app/api/chat/route.ts`
 
 ### Step 2.9 — Document Upload API
-- [ ] `app/api/documents/upload/route.ts` — POST handler
-- [ ] Auth + HR role check
-- [ ] File validation (type, size)
-- [ ] Process pipeline → bulk insert chunks
-- [ ] Audit log
+- [x] `app/api/documents/upload/route.ts` — POST handler
+- [x] Auth + HR role check
+- [x] File validation (type, size)
+- [x] Process pipeline → bulk insert chunks
+- [x] Audit log
 
 **Files:**
 - `app/api/documents/upload/route.ts`
 
 ### Step 2.10 — Document CRUD APIs
-- [ ] `app/api/documents/route.ts` — GET list (paginated, filtered)
-- [ ] `app/api/documents/[id]/route.ts` — GET, PATCH, DELETE (soft)
-- [ ] `app/api/documents/search/route.ts` — POST semantic search
+- [x] `app/api/documents/route.ts` — GET list (paginated, filtered)
+- [x] `app/api/documents/[id]/route.ts` — GET, PATCH, DELETE (soft)
+- [x] `app/api/documents/search/route.ts` — POST semantic search
 
 **Files:**
 - `app/api/documents/route.ts`
@@ -227,34 +230,34 @@
 - `app/api/documents/search/route.ts`
 
 ### Step 2.11 — Session APIs
-- [ ] `app/api/sessions/route.ts` — GET list, POST create
-- [ ] `app/api/sessions/[id]/route.ts` — GET with messages, DELETE (archive)
+- [x] `app/api/sessions/route.ts` — GET list, POST create
+- [x] `app/api/sessions/[id]/route.ts` — GET with messages, DELETE (archive)
 
 **Files:**
 - `app/api/sessions/route.ts`
 - `app/api/sessions/[id]/route.ts`
 
 ### Step 2.12 — Feedback API
-- [ ] `app/api/feedback/route.ts` — POST (update message feedback)
+- [x] `app/api/feedback/route.ts` — POST (update message feedback)
 
 **Files:**
 - `app/api/feedback/route.ts`
 
 ### Step 2.13 — Audit Logs API
-- [ ] `app/api/logs/route.ts` — GET (HR only, filtered, paginated)
+- [x] `app/api/logs/route.ts` — GET (HR only, filtered, paginated)
 
 **Files:**
 - `app/api/logs/route.ts`
 
 ### Step 2.14 — Users API
-- [ ] `app/api/users/route.ts` — GET list (HR), PATCH role (admin only)
+- [x] `app/api/users/route.ts` — GET list (HR), PATCH role (admin only)
 
 **Files:**
 - `app/api/users/route.ts`
 
 ### Step 2.15 — Rate Limiting
-- [ ] `lib/rate-limit.ts` — `checkRateLimit()` database-backed
-- [ ] `lib/rate-limit.test.ts` — Unit tests
+- [x] `lib/rate-limit.ts` — `checkRateLimit()` database-backed
+- [x] `lib/rate-limit.test.ts` — Unit tests
 
 **Files:**
 - `lib/rate-limit.ts`
@@ -265,12 +268,12 @@
 ## Phase 3: Frontend
 
 ### Step 3.1 — Protected Layout
-- [ ] `app/(protected)/layout.tsx` — Server Component, fetch user + profile
-- [ ] `app/(protected)/loading.tsx` — Full page skeleton
-- [ ] `components/layout/sidebar.tsx` — Navigation, session list, HR section
-- [ ] `components/layout/header.tsx` — Title, breadcrumb, user avatar
-- [ ] `components/layout/user-menu.tsx` — Dropdown (name, email, role, sign out, theme)
-- [ ] `components/layout/mobile-nav.tsx` — Sheet/drawer for mobile
+- [x] `app/(protected)/layout.tsx` — Server Component, fetch user + profile
+- [x] `app/(protected)/loading.tsx` — Full page skeleton
+- [x] `components/layout/sidebar.tsx` — Navigation, session list, HR section
+- [x] `components/layout/header.tsx` — Title, breadcrumb, user avatar
+- [x] `components/layout/user-menu.tsx` — Dropdown (name, email, role, sign out, theme)
+- [x] `components/layout/mobile-nav.tsx` — Sheet/drawer for mobile
 
 **Files:**
 - `app/(protected)/layout.tsx`
@@ -281,18 +284,18 @@
 - `components/layout/mobile-nav.tsx`
 
 ### Step 3.2 — Chat Interface
-- [ ] `app/(protected)/chat/page.tsx` — Server Component, welcome state
-- [ ] `app/(protected)/chat/loading.tsx` — Chat skeleton
-- [ ] `app/(protected)/chat/[sessionId]/page.tsx` — Load session + messages
-- [ ] `components/chat/chat-interface.tsx` — Client, main orchestrator
-- [ ] `hooks/use-chat.ts` — sendMessage, SSE parsing, session management
-- [ ] `components/chat/message-list.tsx` — ScrollArea with auto-scroll
-- [ ] `components/chat/message-bubble.tsx` — User/assistant styling, markdown, timestamp
-- [ ] `components/chat/chat-input.tsx` — Textarea, auto-resize, Enter to send
-- [ ] `components/chat/source-citation.tsx` — Collapsible sources section
-- [ ] `components/chat/typing-indicator.tsx` — "Σκέφτομαι..." animation
-- [ ] `components/chat/session-list.tsx` — Sessions sidebar with active highlight
-- [ ] `components/chat/feedback-buttons.tsx` — Thumbs up/down per message
+- [x] `app/(protected)/chat/page.tsx` — Server Component, welcome state
+- [x] `app/(protected)/chat/loading.tsx` — Chat skeleton
+- [x] `app/(protected)/chat/[sessionId]/page.tsx` — Load session + messages
+- [x] `components/chat/chat-interface.tsx` — Client, main orchestrator
+- [x] `hooks/use-chat.ts` — sendMessage, SSE parsing, session management
+- [x] `components/chat/message-list.tsx` — ScrollArea with auto-scroll
+- [x] `components/chat/message-bubble.tsx` — User/assistant styling, markdown, timestamp
+- [x] `components/chat/chat-input.tsx` — Textarea, auto-resize, Enter to send
+- [x] `components/chat/source-citation.tsx` — Collapsible sources section
+- [x] `components/chat/typing-indicator.tsx` — "Σκέφτομαι..." animation
+- [x] `components/chat/session-list.tsx` — Sessions sidebar with active highlight
+- [x] `components/chat/feedback-buttons.tsx` — Thumbs up/down per message
 
 **Files:**
 - `app/(protected)/chat/page.tsx`
@@ -309,15 +312,15 @@
 - `components/chat/feedback-buttons.tsx`
 
 ### Step 3.3 — Chat Hook Tests
-- [ ] `hooks/use-chat.test.ts` — Mock SSE, test optimistic updates, error handling
+- [x] `hooks/use-chat.test.ts` — SSE parsing, session/sources extraction, error handling (11 tests)
 
 **Files:**
 - `hooks/use-chat.test.ts`
 
 ### Step 3.4 — Error States
-- [ ] `app/(protected)/chat/error.tsx` — Chat error boundary (ελληνικά)
-- [ ] `app/error.tsx` — Global error boundary
-- [ ] `app/not-found.tsx` — Custom 404 (ελληνικά)
+- [x] `app/(protected)/chat/error.tsx` — Chat error boundary (ελληνικά)
+- [x] `app/error.tsx` — Global error boundary
+- [x] `app/not-found.tsx` — Custom 404 (ελληνικά)
 
 **Files:**
 - `app/(protected)/chat/error.tsx`
@@ -329,24 +332,24 @@
 ## Phase 4: Admin Dashboard
 
 ### Step 4.1 — Admin Layout
-- [ ] `app/(protected)/admin/layout.tsx` — Role verification, admin tabs
-- [ ] `app/(protected)/admin/page.tsx` — Dashboard, fetch stats server-side
+- [x] `app/(protected)/admin/layout.tsx` — Role verification, admin tabs
+- [x] `app/(protected)/admin/page.tsx` — Dashboard, fetch stats server-side
 
 **Files:**
 - `app/(protected)/admin/layout.tsx`
 - `app/(protected)/admin/page.tsx`
 
 ### Step 4.2 — Stats Cards
-- [ ] `components/admin/stats-cards.tsx` — Συνομιλίες, Ενεργοί Χρήστες, Εγγραφα, Βαθμολογία
+- [x] `components/admin/stats-cards.tsx` — Συνομιλίες, Ενεργοί Χρήστες, Εγγραφα, Βαθμολογία
 
 **Files:**
 - `components/admin/stats-cards.tsx`
 
 ### Step 4.3 — Document Management
-- [ ] `app/(protected)/admin/documents/page.tsx` — Document list page
-- [ ] `components/admin/document-list.tsx` — Table με actions
-- [ ] `components/admin/document-uploader.tsx` — Upload dialog, drag & drop, progress
-- [ ] `hooks/use-documents.ts` — CRUD operations hook
+- [x] `app/(protected)/admin/documents/page.tsx` — Document list page
+- [x] `components/admin/document-list.tsx` — Table με actions
+- [x] `components/admin/document-uploader.tsx` — Upload dialog με progress
+- [ ] `hooks/use-documents.ts` — CRUD operations hook (deferred: inline state used instead)
 
 **Files:**
 - `app/(protected)/admin/documents/page.tsx`
@@ -355,9 +358,9 @@
 - `hooks/use-documents.ts`
 
 ### Step 4.4 — Audit Log Viewer
-- [ ] `app/(protected)/admin/logs/page.tsx` — Logs page
-- [ ] `components/admin/audit-log-table.tsx` — Filterable table (date, action, user)
-- [ ] `hooks/use-audit-logs.ts` — Fetch with filters
+- [x] `app/(protected)/admin/logs/page.tsx` — Logs page
+- [x] `components/admin/audit-log-table.tsx` — Filterable table (date, action, user)
+- [ ] `hooks/use-audit-logs.ts` — Fetch with filters (deferred: inline state used instead)
 
 **Files:**
 - `app/(protected)/admin/logs/page.tsx`
@@ -365,8 +368,8 @@
 - `hooks/use-audit-logs.ts`
 
 ### Step 4.5 — User Management
-- [ ] `app/(protected)/admin/users/page.tsx` — Users page (admin only)
-- [ ] `components/admin/user-table.tsx` — Table, role change dropdown, confirmation
+- [x] `app/(protected)/admin/users/page.tsx` — Users page (admin only)
+- [x] `components/admin/user-table.tsx` — Table, role change dropdown, confirmation
 
 **Files:**
 - `app/(protected)/admin/users/page.tsx`

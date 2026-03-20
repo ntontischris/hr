@@ -12,7 +12,9 @@ vi.mock("./client", () => ({
 import { generateEmbedding, generateEmbeddings } from "./embeddings";
 import { openai } from "./client";
 
-const mockCreate = vi.mocked(openai.embeddings.create);
+const mockCreate = openai.embeddings.create as unknown as ReturnType<
+  typeof vi.fn
+>;
 
 describe("generateEmbedding", () => {
   beforeEach(() => {
@@ -28,7 +30,7 @@ describe("generateEmbedding", () => {
       model: "text-embedding-3-small",
       object: "list" as const,
       usage: { prompt_tokens: 10, total_tokens: 10 },
-    } as any);
+    });
 
     const result = await generateEmbedding("test text");
     expect(result).toEqual(fakeEmbedding);
@@ -58,7 +60,7 @@ describe("generateEmbeddings", () => {
       model: "text-embedding-3-small",
       object: "list" as const,
       usage: { prompt_tokens: 20, total_tokens: 20 },
-    } as any);
+    });
 
     const result = await generateEmbeddings(["text1", "text2"]);
     expect(result).toHaveLength(2);
@@ -70,8 +72,7 @@ describe("generateEmbeddings", () => {
     const texts = Array.from({ length: 150 }, (_, i) => `text-${i}`);
     const fakeEmb = Array.from({ length: 1536 }, () => 0.5);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (mockCreate as any).mockImplementation(async (params: any) => {
+    mockCreate.mockImplementation(async (params: Record<string, unknown>) => {
       const input = params.input as string[];
       return {
         data: input.map((_, idx) => ({

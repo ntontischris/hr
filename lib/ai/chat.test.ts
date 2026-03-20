@@ -15,7 +15,10 @@ vi.mock("./client", () => ({
 import { streamChatResponse } from "./chat";
 import { openai } from "./client";
 
-const mockCreate = vi.mocked(openai.chat.completions.create);
+// vi.fn() returns a mock — use vi.mocked with loose types for OpenAI overloads
+const mockCreate = openai.chat.completions.create as unknown as ReturnType<
+  typeof vi.fn
+>;
 
 async function* fakeStream(texts: string[]) {
   for (const text of texts) {
@@ -43,7 +46,7 @@ describe("streamChatResponse", () => {
   });
 
   it("should return a ReadableStream with SSE events", async () => {
-    (mockCreate as any).mockResolvedValue(fakeStream(["Hello", " world"]));
+    mockCreate.mockResolvedValue(fakeStream(["Hello", " world"]));
 
     const { stream } = await streamChatResponse({
       message: "test",
@@ -60,7 +63,7 @@ describe("streamChatResponse", () => {
   });
 
   it("should call OpenAI with correct model and low temperature", async () => {
-    (mockCreate as any).mockResolvedValue(fakeStream(["OK"]));
+    mockCreate.mockResolvedValue(fakeStream(["OK"]));
 
     const { stream } = await streamChatResponse({
       message: "test",
@@ -82,7 +85,7 @@ describe("streamChatResponse", () => {
   });
 
   it("should include conversation history in messages", async () => {
-    (mockCreate as any).mockResolvedValue(fakeStream(["OK"]));
+    mockCreate.mockResolvedValue(fakeStream(["OK"]));
 
     const { stream } = await streamChatResponse({
       message: "follow up",
@@ -97,15 +100,15 @@ describe("streamChatResponse", () => {
 
     await consumeStream(stream);
 
-    const callArgs = mockCreate.mock.calls[0][0] as any;
-    const messages = callArgs.messages;
+    const callArgs = mockCreate.mock.calls[0][0] as Record<string, unknown>;
+    const messages = callArgs.messages as Array<{ content: string }>;
     expect(messages).toHaveLength(4);
     expect(messages[1].content).toBe("first message");
     expect(messages[2].content).toBe("first answer");
   });
 
   it("should collect full response text via fullResponsePromise", async () => {
-    (mockCreate as any).mockResolvedValue(fakeStream(["Hello", " world"]));
+    mockCreate.mockResolvedValue(fakeStream(["Hello", " world"]));
 
     const { stream, fullResponsePromise } = await streamChatResponse({
       message: "test",

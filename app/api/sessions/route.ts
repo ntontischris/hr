@@ -1,39 +1,54 @@
-﻿import { createClient } from '@/lib/supabase/server';
-import { PaginationSchema } from '@/lib/validators/common';
-import { error, success } from '@/lib/api/response';
+﻿import { z } from "zod/v4";
+
+import { createClient } from "@/lib/supabase/server";
+import { PaginationSchema } from "@/lib/validators/common";
+import { error, success } from "@/lib/api/response";
+
+const CreateSessionSchema = z.object({
+  title: z.string().max(100).optional().default("Νέα συνομιλία"),
+});
 
 export async function GET(request: Request) {
   const supabase = await createClient();
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
   if (authError || !user) {
-    return error('Μη εξουσιοδοτημένη πρόσβαση', 401);
+    return error("Μη εξουσιοδοτημένη πρόσβαση", 401);
   }
 
   const url = new URL(request.url);
   const parsed = PaginationSchema.safeParse({
-    page: url.searchParams.get('page'),
-    limit: url.searchParams.get('limit'),
+    page: url.searchParams.get("page"),
+    limit: url.searchParams.get("limit"),
   });
 
   if (!parsed.success) {
-    return error('Μη έγκυρες παράμετροι', 400);
+    return error("Μη έγκυρες παράμετροι", 400);
   }
 
   const { page, limit } = parsed.data;
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
-  const { data: sessions, error: dbError, count } = await supabase
-    .from('chat_sessions')
-    .select('id, title, is_archived, created_at, updated_at', { count: 'exact' })
-    .eq('user_id', user.id)
-    .eq('is_archived', false)
-    .order('updated_at', { ascending: false })
+  const {
+    data: sessions,
+    error: dbError,
+    count,
+  } = await supabase
+    .from("chat_sessions")
+    .select("id, title, is_archived, created_at, updated_at", {
+      count: "exact",
+    })
+    .eq("user_id", user.id)
+    .eq("is_archived", false)
+    .order("updated_at", { ascending: false })
     .range(from, to);
 
   if (dbError) {
-    return error('Αποτυχία ανάκτησης συνεδριών', 500);
+    return error("Αποτυχία ανάκτησης συνεδριών", 500);
   }
 
   return success({
@@ -45,22 +60,26 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const supabase = await createClient();
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
   if (authError || !user) {
-    return error('Μη εξουσιοδοτημένη πρόσβαση', 401);
+    return error("Μη εξουσιοδοτημένη πρόσβαση", 401);
   }
 
   const body = await request.json().catch(() => ({}));
-  const title = typeof body.title === 'string' ? body.title.slice(0, 100) : 'Νέα συνομιλία';
+  const parsed2 = CreateSessionSchema.safeParse(body);
+  const title = parsed2.success ? parsed2.data.title : "Νέα συνομιλία";
 
   const { data: session, error: dbError } = await supabase
-    .from('chat_sessions')
+    .from("chat_sessions")
     .insert({ user_id: user.id, title })
-    .select('id, title, created_at')
+    .select("id, title, created_at")
     .single();
 
   if (dbError || !session) {
-    return error('Αποτυχία δημιουργίας συνεδρίας', 500);
+    return error("Αποτυχία δημιουργίας συνεδρίας", 500);
   }
 
   return success({ session }, 201);

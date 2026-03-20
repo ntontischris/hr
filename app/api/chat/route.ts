@@ -61,13 +61,15 @@ export async function POST(request: Request) {
   // Load last 10 messages for multi-turn context (fetch newest first, then reverse for chronological order)
   let conversationHistory: Array<{ role: string; content: string }> = [];
   if (sessionId) {
-    const { data: history } = await supabase
+    const { data: history, error: historyError } = await supabase
       .from("chat_messages")
       .select("role, content")
       .eq("session_id", sessionId)
       .order("created_at", { ascending: false })
       .limit(10);
-    conversationHistory = (history ?? []).reverse();
+    if (!historyError) {
+      conversationHistory = (history ?? []).reverse();
+    }
   }
 
   // Build context from documents
@@ -95,12 +97,15 @@ export async function POST(request: Request) {
   }
 
   // Save user message
-  await supabase.from("chat_messages").insert({
+  const { error: msgError } = await supabase.from("chat_messages").insert({
     session_id: activeSessionId,
     user_id: user.id,
     role: "user" as const,
     content: message,
   });
+  if (msgError) {
+    return error("Αποτυχία αποθήκευσης μηνύματος", 500);
+  }
 
   // Stream response
   const startTime = Date.now();

@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   }
 
   // Role check — HR managers and admins only
-  const role = user.app_metadata?.role as string | undefined;
+  const role = user.app_metadata?.user_role as string | undefined;
   if (role !== "hr_manager" && role !== "admin") {
     return error("Δεν έχετε δικαίωμα μεταφόρτωσης εγγράφων", 403);
   }

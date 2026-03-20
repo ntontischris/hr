@@ -98,6 +98,10 @@ function splitLongText(
       chunks.push(chunk);
     }
 
+    if (end >= text.length) {
+      break;
+    }
+
     start = end - overlap;
 
     if (start >= end) {

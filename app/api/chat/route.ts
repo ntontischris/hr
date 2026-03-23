@@ -47,16 +47,29 @@ export async function POST(request: Request) {
   const queryEmbedding = await generateEmbedding(message);
 
   // Hybrid search for relevant documents (respecting role)
+  // Use admin client to bypass RLS — access filtering is done by the search function parameter
+  const adminClient = createAdminClient();
   const accessLevel = ["hr_manager", "admin"].includes(userRole)
     ? "hr_only"
     : "all";
-  const { data: relevantDocs } = await supabase.rpc("hybrid_search", {
-    query_text: message,
-    query_embedding: JSON.stringify(queryEmbedding),
-    match_threshold: 0.5,
-    match_count: 5,
-    p_access_level: accessLevel,
-  });
+  const { data: relevantDocs, error: searchError } = await adminClient.rpc(
+    "hybrid_search",
+    {
+      query_text: message,
+      query_embedding: JSON.stringify(queryEmbedding),
+      match_threshold: 0.3,
+      match_count: 5,
+      p_access_level: accessLevel,
+    },
+  );
+  if (searchError) {
+    console.error(
+      "[chat] hybrid_search failed:",
+      searchError.message,
+      searchError.code,
+    );
+  }
+  console.log("[chat] Found documents:", relevantDocs?.length ?? 0);
 
   // Load last 10 messages for multi-turn context (fetch newest first, then reverse for chronological order)
   let conversationHistory: Array<{ role: string; content: string }> = [];
@@ -126,8 +139,6 @@ export async function POST(request: Request) {
       category: d.category,
     })) ?? [];
 
-  const adminClient = createAdminClient();
-
   // Save assistant message + audit log after stream completes
   // Intentional background save -- errors are logged, not propagated to client
   fullResponsePromise
@@ -141,7 +152,7 @@ export async function POST(request: Request) {
         role: "assistant" as const,
         content: fullText,
         sources_used: sources,
-        model_used: "gpt-5-mini",
+        model_used: "gpt-4o-mini",
         response_time_ms: responseTimeMs,
       });
 
@@ -152,6 +163,8 @@ export async function POST(request: Request) {
         action: "chat",
         details: {
           session_id: activeSessionId,
+          question: message.slice(0, 200),
+          answer_preview: fullText.slice(0, 200),
           response_time_ms: responseTimeMs,
           sources_count: sources.length,
         },
@@ -167,7 +180,7 @@ export async function POST(request: Request) {
       "Cache-Control": "no-cache",
       Connection: "keep-alive",
       "X-Session-Id": activeSessionId!,
-      "X-Sources": JSON.stringify(sources),
+      "X-Sources": encodeURIComponent(JSON.stringify(sources)),
     },
   });
 }

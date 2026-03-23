@@ -125,9 +125,12 @@ export async function POST(request: Request) {
   return success({ message: "Ο χρήστης προσκλήθηκε επιτυχώς" }, 201);
 }
 
-const UpdateRoleSchema = z.object({
+const UpdateUserSchema = z.object({
   userId: UuidSchema,
-  role: RoleSchema,
+  fullName: z.string().min(1).max(200).optional(),
+  role: RoleSchema.optional(),
+  department: z.string().max(200).optional(),
+  isActive: z.boolean().optional(),
 });
 
 export async function PATCH(request: Request) {
@@ -141,43 +144,48 @@ export async function PATCH(request: Request) {
     return error("Μη εξουσιοδοτημένη πρόσβαση", 401);
   }
 
-  // Only admin can change roles
   const userRole = user.app_metadata?.user_role;
   if (userRole !== "admin") {
-    return error("Μόνο οι διαχειριστές μπορούν να αλλάξουν ρόλους", 403);
+    return error("Μόνο οι διαχειριστές μπορούν να επεξεργαστούν χρήστες", 403);
   }
 
   const body = await request.json().catch(() => null);
-  const parsed = UpdateRoleSchema.safeParse(body);
+  const parsed = UpdateUserSchema.safeParse(body);
   if (!parsed.success) {
     return error("Μη έγκυρα δεδομένα", 400, { issues: parsed.error.issues });
   }
 
-  const { userId, role } = parsed.data;
+  const { userId, fullName, role, department, isActive } = parsed.data;
 
-  // Prevent self-demotion
-  if (userId === user.id) {
+  if (userId === user.id && role && role !== userRole) {
     return error("Δεν μπορείτε να αλλάξετε τον δικό σας ρόλο", 400);
   }
 
-  const { data: updated, error: dbError } = await supabase
+  const updates: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  };
+  if (fullName !== undefined) updates.full_name = fullName;
+  if (role !== undefined) updates.role = role;
+  if (department !== undefined) updates.department = department;
+  if (isActive !== undefined) updates.is_active = isActive;
+
+  const adminClient = createAdminClient();
+  const { data: updated, error: dbError } = await adminClient
     .from("profiles")
-    .update({ role, updated_at: new Date().toISOString() })
+    .update(updates)
     .eq("id", userId)
-    .select("id, email, role")
+    .select("id, email, full_name, role, department, is_active, created_at")
     .single();
 
   if (dbError || !updated) {
-    return error("Αποτυχία αλλαγής ρόλου", 500);
+    return error("Αποτυχία ενημέρωσης χρήστη", 500);
   }
 
-  // Audit log via service role client (bypasses RLS)
-  const adminClient = createAdminClient();
   await adminClient.from("audit_logs").insert({
     user_id: user.id,
     user_email: user.email!,
-    action: "role_change",
-    details: { target_user_id: userId, new_role: role },
+    action: "user_update",
+    details: { target_user_id: userId, changes: updates },
   });
 
   return success({ user: updated });

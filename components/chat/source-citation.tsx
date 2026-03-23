@@ -35,10 +35,10 @@ export function SourceCitation({ sources }: SourceCitationProps) {
   if (sources.length === 0) return null;
 
   return (
-    <div className="rounded-lg border bg-background text-sm">
+    <div className="rounded-lg border border-primary/10 bg-primary/5 text-sm">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center gap-2 px-3 py-2 text-muted-foreground hover:text-foreground transition-colors"
+        className="flex w-full items-center gap-2 px-3 py-2 text-primary hover:text-primary/80 transition-colors"
       >
         <BookOpen className="h-3.5 w-3.5" />
         <span className="font-medium">Πηγές ({sources.length})</span>

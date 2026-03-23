@@ -45,8 +45,8 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           className={cn(
             "rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
             isUser
-              ? "bg-primary text-primary-foreground rounded-tr-sm"
-              : "bg-muted rounded-tl-sm",
+              ? "bg-primary text-primary-foreground rounded-tr-sm shadow-sm"
+              : "bg-card border border-border rounded-tl-sm shadow-sm",
           )}
         >
           {/* Simple whitespace-aware rendering. Markdown rendering can be added later. */}

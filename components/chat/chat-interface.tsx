@@ -59,10 +59,10 @@ function WelcomeScreen({
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-8 p-6">
       <div className="flex flex-col items-center gap-3 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 shadow-md">
           <MessageSquareText className="h-8 w-8 text-primary" />
         </div>
-        <h2 className="text-2xl font-semibold">HR AI Assistant</h2>
+        <h2 className="text-2xl font-semibold">Καλώς ήρθατε!</h2>
         <p className="max-w-md text-muted-foreground">
           Γεια σας! Ρωτήστε με οτιδήποτε σχετικά με τις HR πολιτικές, τις
           παροχές, ή τις διαδικασίες της εταιρείας.
@@ -75,7 +75,7 @@ function WelcomeScreen({
             <Button
               key={suggestion}
               variant="outline"
-              className="h-auto whitespace-normal text-left justify-start px-4 py-3 text-sm"
+              className="h-auto whitespace-normal text-left justify-start px-4 py-3 text-sm hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-colors"
               onClick={() => onSuggestionClick(suggestion)}
             >
               {suggestion}

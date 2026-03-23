@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { MessageSquare, FileText, Shield, Users, Plus } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -32,19 +32,23 @@ const ADMIN_ITEMS = [
 
 export function Sidebar({ user, onNavigate }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const isHr = user.role === "hr_manager" || user.role === "admin";
   const isAdmin = user.role === "admin";
+
+  const handleNewChat = () => {
+    onNavigate?.();
+    router.push("/chat");
+  };
 
   return (
     <div className="flex h-full flex-col">
       {/* New chat button */}
       <div className="p-4">
-        <Link href="/chat" onClick={onNavigate}>
-          <Button className="w-full gap-2">
-            <Plus className="h-4 w-4" />
-            Νέα Συνομιλία
-          </Button>
-        </Link>
+        <Button className="w-full gap-2" onClick={handleNewChat}>
+          <Plus className="h-4 w-4" />
+          Νέα Συνομιλία
+        </Button>
       </div>
 
       <ScrollArea className="flex-1 px-3">
@@ -70,7 +74,7 @@ export function Sidebar({ user, onNavigate }: SidebarProps) {
 
         {/* Session list */}
         <div className="mt-4">
-          <p className="px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+          <p className="px-3 text-xs font-medium text-primary/70 uppercase tracking-wider mb-2">
             Πρόσφατες Συνομιλίες
           </p>
           <SessionList onNavigate={onNavigate} />
@@ -80,7 +84,7 @@ export function Sidebar({ user, onNavigate }: SidebarProps) {
         {isHr && (
           <>
             <Separator className="my-4" />
-            <p className="px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+            <p className="px-3 text-xs font-medium text-primary/70 uppercase tracking-wider mb-2">
               Διαχείριση
             </p>
             <nav className="space-y-1">

@@ -46,7 +46,9 @@ export function StatsCards(props: StatsCardsProps) {
             <CardTitle className="text-sm font-medium text-muted-foreground">
               {stat.label}
             </CardTitle>
-            <stat.icon className="h-4 w-4 text-muted-foreground" />
+            <div className="rounded-lg bg-primary/10 p-2">
+              <stat.icon className="h-4 w-4 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">

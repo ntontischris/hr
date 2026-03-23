@@ -48,7 +48,7 @@ export function ChatInput({ onSend, isLoading }: ChatInputProps) {
 
   return (
     <div className="border-t bg-background p-4">
-      <div className="mx-auto flex max-w-3xl gap-2">
+      <div className="mx-auto flex max-w-3xl items-end gap-2 rounded-xl border border-border bg-card p-2 transition-colors focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/30">
         <div className="relative flex-1">
           <Textarea
             ref={textareaRef}
@@ -56,7 +56,7 @@ export function ChatInput({ onSend, isLoading }: ChatInputProps) {
             onChange={handleInput}
             onKeyDown={handleKeyDown}
             placeholder="Ρωτήστε σχετικά με τις HR πολιτικές..."
-            className="min-h-[44px] max-h-[150px] resize-none pr-4"
+            className="min-h-[44px] max-h-[150px] resize-none border-0 bg-transparent pr-4 shadow-none focus-visible:ring-0"
             rows={1}
             disabled={isLoading}
           />

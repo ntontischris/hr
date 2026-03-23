@@ -1,8 +1,9 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { StatsCards } from "@/components/admin/stats-cards";
 
 export default async function AdminDashboard() {
-  const supabase = await createClient();
+  // Use admin client to bypass RLS for aggregate stats
+  const supabase = createAdminClient();
 
   // Fetch stats in parallel
   const [sessionsRes, usersRes, docsRes, feedbackRes] = await Promise.all([

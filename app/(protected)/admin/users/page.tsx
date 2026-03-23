@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { UserTable } from "@/components/admin/user-table";
 
 export default async function UsersPage() {
@@ -16,7 +17,9 @@ export default async function UsersPage() {
     redirect("/admin");
   }
 
-  const { data: profiles } = await supabase
+  // Use admin client to bypass RLS for full user listing
+  const admin = createAdminClient();
+  const { data: profiles } = await admin
     .from("profiles")
     .select("id, email, full_name, role, department, is_active, created_at")
     .order("created_at", { ascending: false });

@@ -1,8 +1,9 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { DocumentList } from "@/components/admin/document-list";
 
 export default async function DocumentsPage() {
-  const supabase = await createClient();
+  // Use admin client to bypass RLS for document listing
+  const supabase = createAdminClient();
 
   const { data: documents } = await supabase
     .from("documents")

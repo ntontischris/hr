@@ -40,6 +40,7 @@ export default function LoginPage() {
       return;
     }
 
+    setIsLoading(false);
     router.push("/chat");
     router.refresh();
   };
@@ -94,8 +95,11 @@ export default function LoginPage() {
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Email</label>
+              <label htmlFor="email" className="text-sm font-medium">
+                Email
+              </label>
               <Input
+                id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -105,8 +109,11 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Κωδικός</label>
+              <label htmlFor="password" className="text-sm font-medium">
+                Κωδικός
+              </label>
               <Input
+                id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

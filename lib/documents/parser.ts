@@ -1,6 +1,7 @@
-// Import inner module to avoid pdf-parse's test file loading bug
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const pdf = require("pdf-parse/lib/pdf-parse.js") as typeof import("pdf-parse");
+const pdf: (
+  buffer: Buffer,
+) => Promise<{ text: string }> = require("pdf-parse/lib/pdf-parse.js");
 import mammoth from "mammoth";
 
 export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB

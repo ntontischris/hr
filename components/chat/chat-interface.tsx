@@ -28,7 +28,7 @@ export function ChatInterface({
   const isWelcome = chat.messages.length === 0;
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="absolute inset-0 flex flex-col">
       {isWelcome ? (
         <WelcomeScreen
           suggestions={suggestions ?? []}

@@ -47,7 +47,7 @@ export default async function ProtectedLayout({
         <Header user={userProfile}>
           <MobileNav user={userProfile} />
         </Header>
-        <main className="flex-1 overflow-hidden">{children}</main>
+        <main className="relative flex-1 overflow-hidden">{children}</main>
       </div>
     </div>
   );

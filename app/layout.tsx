@@ -22,7 +22,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="el" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body
+        className={`${inter.variable} font-sans antialiased`}
+        suppressHydrationWarning
+      >
         <ThemeProvider defaultTheme="system">
           <SupabaseProvider>{children}</SupabaseProvider>
         </ThemeProvider>

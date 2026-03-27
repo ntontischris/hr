@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { MessageSquare } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -25,21 +25,28 @@ export function SessionList({ onNavigate }: SessionListProps) {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadSessions() {
-      const { data } = await supabase
-        .from("chat_sessions")
-        .select("id, title, updated_at")
-        .eq("is_archived", false)
-        .order("updated_at", { ascending: false })
-        .limit(20);
+  const loadSessions = useCallback(async () => {
+    const { data } = await supabase
+      .from("chat_sessions")
+      .select("id, title, updated_at")
+      .eq("is_archived", false)
+      .order("updated_at", { ascending: false })
+      .limit(20);
 
-      setSessions(data ?? []);
-      setIsLoading(false);
-    }
-
-    loadSessions();
+    setSessions(data ?? []);
+    setIsLoading(false);
   }, [supabase]);
+
+  // Load on mount + when pathname changes (new session created)
+  useEffect(() => {
+    loadSessions();
+  }, [loadSessions, pathname]);
+
+  // Poll every 10 seconds for new sessions
+  useEffect(() => {
+    const interval = setInterval(loadSessions, 10000);
+    return () => clearInterval(interval);
+  }, [loadSessions]);
 
   if (isLoading) {
     return (

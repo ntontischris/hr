@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 
 export interface ChatMessage {
   id: string;
@@ -18,7 +17,6 @@ interface UseChatOptions {
 }
 
 export function useChat(options: UseChatOptions = {}) {
-  const router = useRouter();
   const [messages, setMessages] = useState<ChatMessage[]>(
     options.initialMessages ?? [],
   );
@@ -76,11 +74,12 @@ export function useChat(options: UseChatOptions = {}) {
 
         if (newSessionId && newSessionId !== sessionId) {
           setSessionId(newSessionId);
-          router.replace(`/chat/${newSessionId}`, { scroll: false });
+          // Update URL without navigation/re-render
+          window.history.replaceState(null, "", `/chat/${newSessionId}`);
         }
 
         const sources = sourcesHeader
-          ? (JSON.parse(sourcesHeader) as Array<{
+          ? (JSON.parse(decodeURIComponent(sourcesHeader)) as Array<{
               id: string;
               title: string;
               category: string;
@@ -143,15 +142,15 @@ export function useChat(options: UseChatOptions = {}) {
         abortRef.current = null;
       }
     },
-    [sessionId, router],
+    [sessionId],
   );
 
   const startNewChat = useCallback(() => {
     setMessages([]);
     setSessionId(undefined);
     setError(null);
-    router.push("/chat");
-  }, [router]);
+    window.history.replaceState(null, "", "/chat");
+  }, []);
 
   return {
     messages,

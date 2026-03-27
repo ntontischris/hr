@@ -38,9 +38,9 @@ export async function streamChatResponse(
   ];
 
   const completion = await openai.chat.completions.create({
-    model: "gpt-5-mini",
+    model: "gpt-4o-mini",
     messages,
-    max_tokens: 2048,
+    max_completion_tokens: 2048,
     temperature: 0.3,
     stream: true,
   });

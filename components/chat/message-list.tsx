@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageBubble } from "@/components/chat/message-bubble";
 import { TypingIndicator } from "@/components/chat/typing-indicator";
 
@@ -21,7 +20,7 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
   }, [messages, isLoading]);
 
   return (
-    <ScrollArea className="flex-1">
+    <div className="flex-1 overflow-y-auto">
       <div className="mx-auto max-w-3xl space-y-4 p-4">
         {messages.map((message) => (
           <MessageBubble key={message.id} message={message} />
@@ -31,6 +30,6 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
 
         <div ref={bottomRef} />
       </div>
-    </ScrollArea>
+    </div>
   );
 }

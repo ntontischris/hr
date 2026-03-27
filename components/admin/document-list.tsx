@@ -6,6 +6,13 @@ import { ExternalLink, Trash2, Upload } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Table,
   TableBody,
   TableCell,
@@ -49,15 +56,19 @@ export function DocumentList({ initialDocuments }: DocumentListProps) {
   const [documents, setDocuments] = useState(initialDocuments);
   const [isUploaderOpen, setIsUploaderOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Θέλετε σίγουρα να διαγράψετε αυτό το έγγραφο;")) return;
-    setDeletingId(id);
+  const handleDelete = async () => {
+    if (!confirmDeleteId) return;
+    setDeletingId(confirmDeleteId);
+    setConfirmDeleteId(null);
 
     try {
-      const res = await fetch(`/api/documents/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/documents/${confirmDeleteId}`, {
+        method: "DELETE",
+      });
       if (res.ok) {
-        setDocuments((prev) => prev.filter((d) => d.id !== id));
+        setDocuments((prev) => prev.filter((d) => d.id !== confirmDeleteId));
       }
     } finally {
       setDeletingId(null);
@@ -138,7 +149,7 @@ export function DocumentList({ initialDocuments }: DocumentListProps) {
                       size="icon"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDelete(doc.id);
+                        setConfirmDeleteId(doc.id);
                       }}
                       disabled={deletingId === doc.id}
                     >
@@ -157,6 +168,29 @@ export function DocumentList({ initialDocuments }: DocumentListProps) {
         onClose={() => setIsUploaderOpen(false)}
         onUploaded={handleUploaded}
       />
+
+      <Dialog
+        open={!!confirmDeleteId}
+        onOpenChange={(open) => !open && setConfirmDeleteId(null)}
+      >
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Διαγραφή Εγγράφου</DialogTitle>
+            <DialogDescription>
+              Θέλετε σίγουρα να διαγράψετε αυτό το έγγραφο; Η ενέργεια δεν
+              μπορεί να αναιρεθεί.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setConfirmDeleteId(null)}>
+              Ακύρωση
+            </Button>
+            <Button variant="destructive" onClick={handleDelete}>
+              Διαγραφή
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

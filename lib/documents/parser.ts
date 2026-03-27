@@ -1,4 +1,6 @@
-import { PDFParse } from "pdf-parse";
+// Import inner module to avoid pdf-parse's test file loading bug
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const pdf = require("pdf-parse/lib/pdf-parse.js") as typeof import("pdf-parse");
 import mammoth from "mammoth";
 
 export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -23,9 +25,8 @@ function normalizeText(text: string): string {
 }
 
 async function extractPdfText(buffer: Buffer): Promise<string> {
-  const parser = new PDFParse({ data: new Uint8Array(buffer) });
-  const result = await parser.getText();
-  return result.text;
+  const data = await pdf(buffer);
+  return data.text;
 }
 
 export async function extractText(file: File): Promise<string> {

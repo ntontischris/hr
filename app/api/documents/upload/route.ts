@@ -133,18 +133,28 @@ export async function POST(request: Request) {
     }
 
     // Upload original file to Supabase Storage
-    const storagePath = `${document.id}/${file.name}`;
+    // Supabase Storage doesn't allow non-ASCII chars in keys
+    const safeFileName = encodeURIComponent(file.name);
+    const storagePath = `${document.id}/${safeFileName}`;
     const fileBuffer = Buffer.from(await file.arrayBuffer());
+    const contentType =
+      file.type === "text/plain" ? "text/plain; charset=utf-8" : file.type;
     const { error: storageError } = await adminClient.storage
       .from("documents")
       .upload(storagePath, fileBuffer, {
-        contentType: file.type,
+        contentType,
         upsert: false,
       });
 
     if (storageError) {
-      console.error("[upload] Storage upload failed:", storageError.message);
+      console.error("[upload] Storage upload failed:", {
+        message: storageError.message,
+        path: storagePath,
+        docId: document.id,
+      });
       // Non-blocking — document is still usable without the file
+    } else {
+      console.log("[upload] File stored:", storagePath);
     }
 
     // Bulk insert chunks with embeddings

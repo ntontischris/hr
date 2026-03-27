@@ -23,10 +23,10 @@ export async function GET(request: Request, { params }: RouteParams) {
     return error("Μη έγκυρο αναγνωριστικό", 400);
   }
 
-  // Fetch document metadata (uses RLS — employees only see public docs)
+  // Fetch document metadata + content fallback (uses RLS)
   const { data: doc, error: dbError } = await supabase
     .from("documents")
-    .select("id, file_name, file_type")
+    .select("id, title, content, file_name, file_type")
     .eq("id", id)
     .is("parent_document_id", null)
     .single();
@@ -35,21 +35,45 @@ export async function GET(request: Request, { params }: RouteParams) {
     return error("Δεν βρέθηκε το έγγραφο", 404);
   }
 
-  if (!doc.file_name) {
-    return error("Δεν υπάρχει αρχείο για αυτό το έγγραφο", 404);
+  // Try to serve original file from storage
+  if (doc.file_name) {
+    const adminClient = createAdminClient();
+    const storagePath = `${doc.id}/${encodeURIComponent(doc.file_name)}`;
+    const { data: signedData } = await adminClient.storage
+      .from("documents")
+      .createSignedUrl(storagePath, 300);
+
+    if (signedData?.signedUrl) {
+      const fileRes = await fetch(signedData.signedUrl);
+      if (fileRes.ok) {
+        const fileBuffer = await fileRes.arrayBuffer();
+        const isText = doc.file_type === "text/plain";
+        const contentType = isText
+          ? "text/plain; charset=utf-8"
+          : (doc.file_type ?? "application/octet-stream");
+        const encodedName = encodeURIComponent(doc.file_name);
+
+        return new Response(fileBuffer, {
+          headers: {
+            "Content-Type": contentType,
+            "Content-Disposition": `inline; filename*=UTF-8''${encodedName}`,
+          },
+        });
+      }
+    }
   }
 
-  // Generate signed URL via admin client (bypasses storage RLS for simplicity)
-  const adminClient = createAdminClient();
-  const storagePath = `${doc.id}/${doc.file_name}`;
-  const { data: signedData, error: signError } = await adminClient.storage
-    .from("documents")
-    .createSignedUrl(storagePath, 60); // 60 seconds expiry
-
-  if (signError || !signedData?.signedUrl) {
-    console.error("[download] Signed URL failed:", signError?.message);
-    return error("Αδυναμία δημιουργίας συνδέσμου λήψης", 500);
+  // Fallback: serve extracted text content from database
+  if (!doc.content) {
+    return error("Δεν υπάρχει περιεχόμενο για αυτό το έγγραφο", 404);
   }
 
-  return Response.redirect(signedData.signedUrl, 302);
+  const encodedTitle = encodeURIComponent(`${doc.title}.txt`);
+
+  return new Response(doc.content, {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Content-Disposition": `inline; filename*=UTF-8''${encodedTitle}`,
+    },
+  });
 }

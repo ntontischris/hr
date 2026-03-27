@@ -11,6 +11,7 @@ export default async function DocumentsPage() {
       "id, title, category, access_level, file_name, version, is_active, created_at, updated_at",
     )
     .is("parent_document_id", null)
+    .eq("is_active", true)
     .order("created_at", { ascending: false })
     .limit(50);
 

@@ -123,10 +123,12 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     return error("Μη έγκυρο αναγνωριστικό", 400);
   }
 
+  const adminClient = createAdminClient();
+
   // Verify document exists
-  const { data: doc, error: findError } = await supabase
+  const { data: doc, error: findError } = await adminClient
     .from("documents")
-    .select("id")
+    .select("id, file_name")
     .eq("id", id)
     .is("parent_document_id", null)
     .single();
@@ -141,7 +143,7 @@ export async function DELETE(request: Request, { params }: RouteParams) {
   };
 
   // Soft delete parent document
-  const { error: dbError } = await supabase
+  const { error: dbError } = await adminClient
     .from("documents")
     .update(softDelete)
     .eq("id", id);
@@ -151,13 +153,10 @@ export async function DELETE(request: Request, { params }: RouteParams) {
   }
 
   // Also soft-delete child chunks
-  await supabase
+  await adminClient
     .from("documents")
     .update(softDelete)
     .eq("parent_document_id", id);
-
-  // Audit log
-  const adminClient = createAdminClient();
   await adminClient.from("audit_logs").insert({
     user_id: user.id,
     user_email: user.email!,

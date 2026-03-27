@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { UserPlus, Pencil, Search } from "lucide-react";
+import { UserPlus, Pencil, Search, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -53,6 +53,8 @@ export function UserTable({ initialUsers }: UserTableProps) {
   const [users, setUsers] = useState(initialUsers);
   const [search, setSearch] = useState("");
   const [editingUser, setEditingUser] = useState<UserRow | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const filtered = search
     ? users.filter(
@@ -70,6 +72,26 @@ export function UserTable({ initialUsers }: UserTableProps) {
   const handleUserUpdated = (updated: UserRow) => {
     setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
     setEditingUser(null);
+  };
+
+  const handleDelete = async () => {
+    if (!confirmDeleteId) return;
+    setIsDeleting(true);
+
+    try {
+      const res = await fetch("/api/users", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: confirmDeleteId }),
+      });
+
+      if (res.ok) {
+        setUsers((prev) => prev.filter((u) => u.id !== confirmDeleteId));
+      }
+    } finally {
+      setIsDeleting(false);
+      setConfirmDeleteId(null);
+    }
   };
 
   return (
@@ -153,14 +175,24 @@ export function UserTable({ initialUsers }: UserTableProps) {
                     {new Date(user.created_at).toLocaleDateString("el-GR")}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setEditingUser(user)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                      <span className="sr-only">Επεξεργασία</span>
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setEditingUser(user)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                        <span className="sr-only">Επεξεργασία</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setConfirmDeleteId(user.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                        <span className="sr-only">Διαγραφή</span>
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -168,6 +200,38 @@ export function UserTable({ initialUsers }: UserTableProps) {
           </TableBody>
         </Table>
       </div>
+
+      {/* Delete Confirm Dialog */}
+      <Dialog
+        open={!!confirmDeleteId}
+        onOpenChange={(open) => !open && setConfirmDeleteId(null)}
+      >
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Διαγραφή Χρήστη</DialogTitle>
+            <DialogDescription>
+              Θέλετε σίγουρα να διαγράψετε αυτόν τον χρήστη; Η ενέργεια είναι μη
+              αναστρέψιμη.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              variant="outline"
+              onClick={() => setConfirmDeleteId(null)}
+              disabled={isDeleting}
+            >
+              Ακύρωση
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Διαγραφή..." : "Διαγραφή"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Dialog */}
       {editingUser && (

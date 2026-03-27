@@ -218,3 +218,67 @@ export async function PATCH(request: Request) {
 
   return success({ user: updated });
 }
+
+const DeleteUserSchema = z.object({
+  userId: UuidSchema,
+});
+
+export async function DELETE(request: Request) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return error("Μη εξουσιοδοτημένη πρόσβαση", 401);
+  }
+
+  const userRole = user.app_metadata?.user_role;
+  if (userRole !== "admin") {
+    return error("Μόνο οι διαχειριστές μπορούν να διαγράψουν χρήστες", 403);
+  }
+
+  const body = await request.json().catch(() => null);
+  const parsed = DeleteUserSchema.safeParse(body);
+  if (!parsed.success) {
+    return error("Μη έγκυρα δεδομένα", 400);
+  }
+
+  const { userId } = parsed.data;
+
+  if (userId === user.id) {
+    return error("Δεν μπορείτε να διαγράψετε τον εαυτό σας", 400);
+  }
+
+  const adminClient = createAdminClient();
+
+  // Get user info for audit log
+  const { data: targetUser } = await adminClient
+    .from("profiles")
+    .select("email")
+    .eq("id", userId)
+    .single();
+
+  // Delete from Supabase Auth (cascades to profiles via trigger or we delete manually)
+  const { error: authDeleteError } =
+    await adminClient.auth.admin.deleteUser(userId);
+
+  if (authDeleteError) {
+    console.error("[user_delete] deleteUser failed:", authDeleteError.message);
+    return error(`Αποτυχία διαγραφής χρήστη: ${authDeleteError.message}`, 500);
+  }
+
+  // Delete profile (in case no cascade from auth)
+  await adminClient.from("profiles").delete().eq("id", userId);
+
+  // Audit log
+  await adminClient.from("audit_logs").insert({
+    user_id: user.id,
+    user_email: user.email!,
+    action: "user_delete",
+    details: { deleted_user_id: userId, deleted_email: targetUser?.email },
+  });
+
+  return success({ deleted: true });
+}

@@ -98,7 +98,16 @@ export async function POST(request: Request) {
     });
 
   if (inviteError) {
-    return error("Αποτυχία πρόσκλησης χρήστη", 500);
+    console.error(
+      "[user_invite] inviteUserByEmail failed:",
+      inviteError.message,
+    );
+    return error(
+      inviteError.message.includes("already registered")
+        ? "Ο χρήστης είναι ήδη εγγεγραμμένος"
+        : `Αποτυχία πρόσκλησης χρήστη: ${inviteError.message}`,
+      500,
+    );
   }
 
   // Upsert profile with role and department
@@ -170,6 +179,21 @@ export async function PATCH(request: Request) {
   if (isActive !== undefined) updates.is_active = isActive;
 
   const adminClient = createAdminClient();
+
+  // Sync role to app_metadata so middleware/RLS see the change
+  if (role !== undefined) {
+    const { error: metaError } = await adminClient.auth.admin.updateUserById(
+      userId,
+      {
+        app_metadata: { user_role: role },
+      },
+    );
+    if (metaError) {
+      console.error("[user_update] updateUserById failed:", metaError.message);
+      return error(`Αποτυχία ενημέρωσης ρόλου: ${metaError.message}`, 500);
+    }
+  }
+
   const { data: updated, error: dbError } = await adminClient
     .from("profiles")
     .update(updates)
@@ -178,7 +202,11 @@ export async function PATCH(request: Request) {
     .single();
 
   if (dbError || !updated) {
-    return error("Αποτυχία ενημέρωσης χρήστη", 500);
+    console.error("[user_update] profile update failed:", dbError?.message);
+    return error(
+      `Αποτυχία ενημέρωσης χρήστη: ${dbError?.message ?? "not found"}`,
+      500,
+    );
   }
 
   await adminClient.from("audit_logs").insert({

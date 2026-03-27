@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2, Upload } from "lucide-react";
+import { ExternalLink, Trash2, Upload } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -99,8 +99,19 @@ export function DocumentList({ initialDocuments }: DocumentListProps) {
               </TableRow>
             ) : (
               documents.map((doc) => (
-                <TableRow key={doc.id}>
-                  <TableCell className="font-medium">{doc.title}</TableCell>
+                <TableRow
+                  key={doc.id}
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() =>
+                    window.open(`/api/documents/${doc.id}/download`, "_blank")
+                  }
+                >
+                  <TableCell className="font-medium">
+                    <span className="inline-flex items-center gap-1.5">
+                      {doc.title}
+                      <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+                    </span>
+                  </TableCell>
                   <TableCell>
                     <Badge variant="secondary">
                       {CATEGORY_LABELS[doc.category] ?? doc.category}
@@ -125,7 +136,10 @@ export function DocumentList({ initialDocuments }: DocumentListProps) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleDelete(doc.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(doc.id);
+                      }}
                       disabled={deletingId === doc.id}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />

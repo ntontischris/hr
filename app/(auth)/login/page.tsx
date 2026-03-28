@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { MessageSquareText, Shield, FileText } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
@@ -16,20 +16,33 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+const ERROR_MESSAGES: Record<string, string> = {
+  expired_link: "Ο σύνδεσμος έχει λήξει. Ζητήστε νέο σύνδεσμο.",
+  invalid_link: "Μη έγκυρος σύνδεσμος. Δοκιμάστε ξανά.",
+};
+
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlError = searchParams.get("error");
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [signUpSuccess, setSignUpSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(
+    urlError ? (ERROR_MESSAGES[urlError] ?? null) : null,
+  );
   const [supabase] = useState(() => createClient());
+
+  // Forgot password state
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetSent, setResetSent] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
-    setSignUpSuccess(false);
 
     const { error: authError } = await supabase.auth.signInWithPassword({
       email,
@@ -47,31 +60,29 @@ export default function LoginPage() {
     router.refresh();
   };
 
-  const handleSignUp = async () => {
-    if (!email || !password) {
-      setError("Συμπληρώστε email και κωδικό.");
+  const handleResetPassword = async () => {
+    if (!resetEmail) {
+      setError("Συμπληρώστε το email σας.");
       return;
     }
 
     setIsLoading(true);
     setError(null);
-    setSignUpSuccess(false);
 
-    const { error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/callback`,
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+      resetEmail,
+      {
+        redirectTo: `${window.location.origin}/auth/callback?next=/set-password`,
       },
-    });
+    );
 
-    if (signUpError) {
-      setError("Η εγγραφή απέτυχε. Δοκιμάστε ξανά.");
+    if (resetError) {
+      setError("Αποτυχία αποστολής. Δοκιμάστε ξανά.");
       setIsLoading(false);
       return;
     }
 
-    setSignUpSuccess(true);
+    setResetSent(true);
     setIsLoading(false);
   };
 
@@ -134,66 +145,126 @@ export default function LoginPage() {
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
-                <DialogTitle className="text-center">Σύνδεση</DialogTitle>
+                <DialogTitle className="text-center">
+                  {isForgotPassword ? "Επαναφορά κωδικού" : "Σύνδεση"}
+                </DialogTitle>
                 <DialogDescription className="text-center">
-                  Συνδεθείτε με τον εταιρικό σας λογαριασμό
+                  {isForgotPassword
+                    ? "Εισάγετε το email σας για να λάβετε σύνδεσμο επαναφοράς"
+                    : "Συνδεθείτε με τον εταιρικό σας λογαριασμό"}
                 </DialogDescription>
               </DialogHeader>
 
               <div className="space-y-4 pt-2">
-                {signUpSuccess && (
+                {resetSent && (
                   <div className="rounded-lg bg-primary/10 px-4 py-3 text-sm text-primary">
-                    Ελέγξτε το email σας για επιβεβαίωση!
+                    Ελέγξτε το email σας για τον σύνδεσμο επαναφοράς!
                   </div>
                 )}
 
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <label htmlFor="email" className="text-sm font-medium">
-                      Email
-                    </label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@company.gr"
-                      required
-                      autoComplete="email"
-                    />
+                {isForgotPassword ? (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="resetEmail"
+                        className="text-sm font-medium"
+                      >
+                        Email
+                      </label>
+                      <Input
+                        id="resetEmail"
+                        type="email"
+                        value={resetEmail}
+                        onChange={(e) => setResetEmail(e.target.value)}
+                        placeholder="you@company.gr"
+                        required
+                        autoComplete="email"
+                        autoFocus
+                      />
+                    </div>
+
+                    {error && (
+                      <p className="text-sm text-destructive">{error}</p>
+                    )}
+
+                    <Button
+                      className="w-full"
+                      onClick={handleResetPassword}
+                      disabled={isLoading || resetSent}
+                    >
+                      {isLoading ? "Αποστολή..." : "Αποστολή συνδέσμου"}
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="w-full text-sm"
+                      onClick={() => {
+                        setIsForgotPassword(false);
+                        setError(null);
+                        setResetSent(false);
+                      }}
+                    >
+                      Επιστροφή στη σύνδεση
+                    </Button>
                   </div>
-                  <div className="space-y-2">
-                    <label htmlFor="password" className="text-sm font-medium">
-                      Κωδικός
-                    </label>
-                    <Input
-                      id="password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      required
-                      autoComplete="current-password"
-                      minLength={6}
-                    />
-                  </div>
+                ) : (
+                  <form onSubmit={handleLogin} className="space-y-4">
+                    <div className="space-y-2">
+                      <label htmlFor="email" className="text-sm font-medium">
+                        Email
+                      </label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="you@company.gr"
+                        required
+                        autoComplete="email"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label htmlFor="password" className="text-sm font-medium">
+                        Κωδικός
+                      </label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        required
+                        autoComplete="current-password"
+                        minLength={6}
+                      />
+                    </div>
 
-                  {error && <p className="text-sm text-destructive">{error}</p>}
+                    {error && (
+                      <p className="text-sm text-destructive">{error}</p>
+                    )}
 
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Σύνδεση..." : "Σύνδεση"}
-                  </Button>
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Σύνδεση..." : "Σύνδεση"}
+                    </Button>
 
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="w-full text-sm"
-                    onClick={handleSignUp}
-                    disabled={isLoading}
-                  >
-                    Δημιουργία λογαριασμού
-                  </Button>
-                </form>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="w-full text-sm"
+                      onClick={() => {
+                        setIsForgotPassword(true);
+                        setError(null);
+                      }}
+                    >
+                      Ξέχασα τον κωδικό μου
+                    </Button>
+                  </form>
+                )}
               </div>
             </DialogContent>
           </Dialog>

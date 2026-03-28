@@ -80,7 +80,7 @@ function LoginContent() {
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(
       resetEmail,
       {
-        redirectTo: `${window.location.origin}/auth/callback?next=/set-password`,
+        redirectTo: `${window.location.origin}/callback?next=/set-password`,
       },
     );
 

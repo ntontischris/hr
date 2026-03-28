@@ -38,6 +38,7 @@ export function Sidebar({ user, onNavigate }: SidebarProps) {
 
   const handleNewChat = () => {
     onNavigate?.();
+    window.dispatchEvent(new Event("new-chat"));
     router.push("/chat");
   };
 

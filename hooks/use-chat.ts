@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export interface ChatMessage {
   id: string;
@@ -146,11 +146,24 @@ export function useChat(options: UseChatOptions = {}) {
   );
 
   const startNewChat = useCallback(() => {
+    // Abort any in-flight streaming request
+    abortRef.current?.abort();
+    abortRef.current = null;
     setMessages([]);
     setSessionId(undefined);
     setError(null);
+    setIsLoading(false);
     window.history.replaceState(null, "", "/chat");
   }, []);
+
+  // Listen for "new-chat" event from sidebar to reset state
+  // Needed because history.replaceState desynchronizes the URL from the Next.js router,
+  // making router.push("/chat") a no-op when we're already on /chat
+  useEffect(() => {
+    const handler = () => startNewChat();
+    window.addEventListener("new-chat", handler);
+    return () => window.removeEventListener("new-chat", handler);
+  }, [startNewChat]);
 
   return {
     messages,

@@ -90,11 +90,13 @@ export async function POST(request: Request) {
   const { email, fullName, role, department } = parsed.data;
 
   const adminClient = createAdminClient();
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
   // Invite user via Supabase Admin API
   const { data: inviteData, error: inviteError } =
     await adminClient.auth.admin.inviteUserByEmail(email, {
       data: { full_name: fullName, user_role: role },
+      redirectTo: `${appUrl}/auth/callback?next=/set-password`,
     });
 
   if (inviteError) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MessageSquareText, Shield, FileText } from "lucide-react";
 
@@ -41,6 +41,37 @@ function LoginContent() {
     urlError ? (ERROR_MESSAGES[urlError] ?? null) : null,
   );
   const [supabase] = useState(() => createClient());
+
+  // Handle auth callback from email links (invite/recovery)
+  // Supabase implicit flow sends tokens in URL hash: #access_token=...&type=invite
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (!hash || !hash.includes("access_token")) return;
+
+    const params = new URLSearchParams(hash.substring(1));
+    const type = params.get("type");
+    let didRedirect = false;
+
+    const redirect = () => {
+      if (didRedirect) return;
+      didRedirect = true;
+      if (type === "invite" || type === "recovery") {
+        router.push("/set-password");
+      } else {
+        router.push("/chat");
+      }
+      router.refresh();
+    };
+
+    // Listen for when Supabase client processes the hash and establishes session
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN") redirect();
+    });
+
+    return () => subscription.unsubscribe();
+  }, [supabase, router]);
 
   // Forgot password state
   const [isForgotPassword, setIsForgotPassword] = useState(false);
